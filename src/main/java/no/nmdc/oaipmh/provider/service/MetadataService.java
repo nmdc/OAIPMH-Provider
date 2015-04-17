@@ -6,6 +6,7 @@ import javax.xml.bind.JAXBException;
 import no.nmdc.oaipmh.provider.domain.dif.DIF;
 
 /**
+ * Service that provides access to all dif records
  *
  * @author sjurl
  */

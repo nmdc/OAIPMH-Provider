@@ -15,9 +15,10 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-import org.xml.sax.SAXParseException;
 
 /**
+ * Implementation of the MetadataService interface that gives access to DIF
+ * metadata records referenced in the properties configuration file
  *
  * @author sjurl
  */

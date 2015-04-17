@@ -14,6 +14,8 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 /**
+ * Configuration class that enables mvc and sets up the xml conversion for
+ * responses and provides the metadata from configuration files
  *
  * @author sjurl
  */

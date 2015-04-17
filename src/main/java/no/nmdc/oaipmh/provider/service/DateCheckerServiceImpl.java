@@ -7,6 +7,7 @@ import no.nmdc.oaipmh.provider.domain.dif.DIF;
 import org.springframework.stereotype.Service;
 
 /**
+ * Implementation of the date checker service
  *
  * @author sjurl
  */

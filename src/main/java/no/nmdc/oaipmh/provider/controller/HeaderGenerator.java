@@ -13,10 +13,12 @@ import no.nmdc.oaipmh.provider.domain.RequestType;
 import no.nmdc.oaipmh.provider.domain.VerbType;
 
 /**
+ * Class that generates the header for all calls to the OAIPMH provider. this
+ * class is used by all the controllers
  *
  * @author sjurl
  */
-public class HeaderGenerator {
+public abstract class HeaderGenerator {
 
     protected OAIPMHtype generateOAIPMHType(HttpServletRequest request, ObjectFactory of, VerbType requestType) throws DatatypeConfigurationException {
 
