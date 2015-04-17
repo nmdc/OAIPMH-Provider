@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
  * @author sjurl
  */
 @Controller
-public class Identify {
+public class Identify extends HeaderGenerator {
 
     @Autowired()
     @Qualifier("providerConf")
@@ -36,21 +36,13 @@ public class Identify {
     public @ResponseBody
     OAIPMHtype identify(HttpServletRequest request) throws DatatypeConfigurationException {
         ObjectFactory of = new ObjectFactory();
-        String baseUrl = String.format("%s://%s:%d/request/oaipmh", request.getScheme(), request.getServerName(), request.getServerPort());
-        OAIPMHtype oaipmh = of.createOAIPMHtype();
-        GregorianCalendar cal = new GregorianCalendar();
-        cal.setTime(new Date());
-        XMLGregorianCalendar cal2 = DatatypeFactory.newInstance().newXMLGregorianCalendar(cal);
-        oaipmh.setResponseDate(cal2);
-        RequestType rt = of.createRequestType();
-        rt.setVerb(VerbType.IDENTIFY);
-        rt.setValue(baseUrl);
-        oaipmh.setRequest(rt);
+        OAIPMHtype oaipmh = generateOAIPMHType(request, of, VerbType.IDENTIFY);
         IdentifyType identify = of.createIdentifyType();
         identify.setRepositoryName(configuration.getString("identify.repository.name"));
+        String baseUrl = String.format("%s://%s:%d/request/oaipmh", request.getScheme(), request.getServerName(), request.getServerPort());
         identify.setBaseURL(baseUrl);
         identify.setProtocolVersion("2.0");
-        
+
         List<String> adminEmails = (List<String>) (List<?>) configuration.getList("identify.admin.email");
         for (String adminEmail : adminEmails) {
             identify.getAdminEmail().add(adminEmail);

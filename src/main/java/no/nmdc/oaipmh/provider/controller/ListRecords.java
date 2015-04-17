@@ -19,6 +19,7 @@ import no.nmdc.oaipmh.provider.domain.ObjectFactory;
 import no.nmdc.oaipmh.provider.domain.RecordType;
 import no.nmdc.oaipmh.provider.domain.VerbType;
 import no.nmdc.oaipmh.provider.domain.dif.DIF;
+import no.nmdc.oaipmh.provider.exceptions.BadMetadataFormatException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +46,11 @@ public class ListRecords extends HeaderGenerator {
     public void listRecords(@RequestParam(value = "metadataPrefix", required = false) String metadatPrefix,
             @RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date from, @RequestParam(value = "until", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date until,
             @RequestParam(value = "set", required = false) String set, @RequestParam(value = "resumptionToken", required = false) String resumptionToken,
-            HttpServletRequest request, HttpServletResponse response) throws DatatypeConfigurationException, IOException, JAXBException {
+            HttpServletRequest request, HttpServletResponse response) throws DatatypeConfigurationException, IOException, JAXBException, BadMetadataFormatException {
+
+        if (!metadatPrefix.equals("dif")) {
+            throw new BadMetadataFormatException("metadataprefix: " + metadatPrefix + " is not known by the server.");
+        }
 
         ObjectFactory of = new ObjectFactory();
         OAIPMHtype oaipmh = generateOAIPMHType(request, of, VerbType.LIST_RECORDS);
