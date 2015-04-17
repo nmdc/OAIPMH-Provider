@@ -1,5 +1,3 @@
-/*
- */
 package no.nmdc.oaipmh.provider.config;
 
 import java.util.Date;
@@ -11,34 +9,29 @@ import no.nmdc.oaipmh.provider.domain.OAIPMHerrorType;
 import no.nmdc.oaipmh.provider.domain.OAIPMHerrorcodeType;
 import no.nmdc.oaipmh.provider.domain.OAIPMHtype;
 import no.nmdc.oaipmh.provider.domain.ObjectFactory;
-import no.nmdc.oaipmh.provider.domain.VerbType;
-import no.nmdc.oaipmh.provider.exceptions.BadMetadataFormatException;
-import no.nmdc.oaipmh.provider.exceptions.IdDoesNotExistException;
-import org.springframework.http.HttpStatus;
+import no.nmdc.oaipmh.provider.exceptions.OAIPMHException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.UnsatisfiedServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
+ * Class that handles exceptions and gives the user the correct feedback
  *
  * @author sjurl
  */
 @ControllerAdvice
 public class ExceptionHandlerAdvice {
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ResponseBody
-    public OAIPMHtype handleException(final Exception ex) {
-        ObjectFactory of = new ObjectFactory();
-        OAIPMHtype oaipmh = of.createOAIPMHtype();
-        System.out.println(ex.getMessage() + ex.getClass().getName());
-        return oaipmh;
-    }
-
+    /**
+     * Special handler for BAD_ARGUMENT as this is triggered by a
+     * MissingServletRequestParameterException from spring
+     *
+     * @param ex
+     * @return
+     * @throws DatatypeConfigurationException
+     */
     @ExceptionHandler
     @ResponseBody
     public OAIPMHtype handleMissingParameter(final MissingServletRequestParameterException ex) throws DatatypeConfigurationException {
@@ -55,6 +48,14 @@ public class ExceptionHandlerAdvice {
         return oaipmh;
     }
 
+    /**
+     * Special handling of BAD_VERB exception as this is triggered by
+     * UnsatisfiedServletRequestParameterException from spring
+     *
+     * @param ex
+     * @return
+     * @throws DatatypeConfigurationException
+     */
     @ExceptionHandler
     @ResponseBody
     public OAIPMHtype handleBadVerb(final UnsatisfiedServletRequestParameterException ex) throws DatatypeConfigurationException {
@@ -71,9 +72,17 @@ public class ExceptionHandlerAdvice {
         return oaipmh;
     }
 
+    /**
+     * Handles all other exceptions that can be thrown by the supported verbs
+     * and returns a correctly formatted exception
+     *
+     * @param ex
+     * @return
+     * @throws DatatypeConfigurationException
+     */
     @ExceptionHandler
     @ResponseBody
-    public OAIPMHtype handlecannotDisseminateFormat(final BadMetadataFormatException ex) throws DatatypeConfigurationException {
+    public OAIPMHtype noRecordsMatch(final OAIPMHException ex) throws DatatypeConfigurationException {
         ObjectFactory of = new ObjectFactory();
         OAIPMHtype oaipmh = of.createOAIPMHtype();
         GregorianCalendar cal = new GregorianCalendar();
@@ -81,23 +90,7 @@ public class ExceptionHandlerAdvice {
         XMLGregorianCalendar cal2 = DatatypeFactory.newInstance().newXMLGregorianCalendar(cal);
         oaipmh.setResponseDate(cal2);
         OAIPMHerrorType error = of.createOAIPMHerrorType();
-        error.setCode(OAIPMHerrorcodeType.CANNOT_DISSEMINATE_FORMAT);
-        error.setValue(ex.getMessage());
-        oaipmh.getError().add(error);
-        return oaipmh;
-    }
-
-    @ExceptionHandler
-    @ResponseBody
-    public OAIPMHtype idDoesNotExist(final IdDoesNotExistException ex) throws DatatypeConfigurationException {
-        ObjectFactory of = new ObjectFactory();
-        OAIPMHtype oaipmh = of.createOAIPMHtype();
-        GregorianCalendar cal = new GregorianCalendar();
-        cal.setTime(new Date());
-        XMLGregorianCalendar cal2 = DatatypeFactory.newInstance().newXMLGregorianCalendar(cal);
-        oaipmh.setResponseDate(cal2);
-        OAIPMHerrorType error = of.createOAIPMHerrorType();
-        error.setCode(OAIPMHerrorcodeType.ID_DOES_NOT_EXIST);
+        error.setCode(ex.getErrorCodeType());
         error.setValue(ex.getMessage());
         oaipmh.getError().add(error);
         return oaipmh;

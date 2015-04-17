@@ -1,18 +1,13 @@
 package no.nmdc.oaipmh.provider.controller;
 
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
 import no.nmdc.oaipmh.provider.domain.DeletedRecordType;
 import no.nmdc.oaipmh.provider.domain.GranularityType;
 import no.nmdc.oaipmh.provider.domain.IdentifyType;
 import no.nmdc.oaipmh.provider.domain.OAIPMHtype;
 import no.nmdc.oaipmh.provider.domain.ObjectFactory;
-import no.nmdc.oaipmh.provider.domain.RequestType;
 import no.nmdc.oaipmh.provider.domain.VerbType;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,11 +17,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
+ * Controller that handles the identify verb for the oai-pmh server
  *
  * @author sjurl
  */
 @Controller
-public class Identify extends HeaderGenerator {
+public class IdentifyController extends HeaderGenerator {
 
     @Autowired()
     @Qualifier("providerConf")

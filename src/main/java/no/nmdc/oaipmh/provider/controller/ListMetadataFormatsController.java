@@ -1,13 +1,10 @@
 package no.nmdc.oaipmh.provider.controller;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
 import no.nmdc.oaipmh.provider.domain.ListMetadataFormatsType;
 import no.nmdc.oaipmh.provider.domain.MetadataFormatType;
@@ -16,33 +13,36 @@ import no.nmdc.oaipmh.provider.domain.ObjectFactory;
 import no.nmdc.oaipmh.provider.domain.VerbType;
 import no.nmdc.oaipmh.provider.domain.dif.DIF;
 import no.nmdc.oaipmh.provider.exceptions.IdDoesNotExistException;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import no.nmdc.oaipmh.provider.exceptions.NoMetadataFormats;
+import no.nmdc.oaipmh.provider.service.MetadataService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
+ * Controller that handles the ListMetadataFormats verb of the oai pmh
+ * specification
  *
  * @author sjurl
  */
 @Controller
-public class ListMetadataFormats extends HeaderGenerator {
+public class ListMetadataFormatsController extends HeaderGenerator {
 
-    @Autowired()
-    @Qualifier("providerConf")
-    private PropertiesConfiguration configuration;
+    @Autowired
+    private MetadataService metadataService;
 
     @RequestMapping(value = "oaipmh", params = "verb=ListMetadataFormats")
     public @ResponseBody
-    OAIPMHtype listMetadataFormats(@RequestParam(value = "identifier", required = false) String identifier, HttpServletRequest request) throws DatatypeConfigurationException, IOException, JAXBException, IdDoesNotExistException {
+    OAIPMHtype listMetadataFormats(@RequestParam(value = "identifier", required = false) String identifier, HttpServletRequest request) throws DatatypeConfigurationException, IOException, JAXBException, IdDoesNotExistException, NoMetadataFormats {
         ObjectFactory of = new ObjectFactory();
 
         List<MetadataFormatType> mfts = getFormatsForId(identifier, of);
+
+        if (mfts.isEmpty() && identifier != null) {
+            throw new NoMetadataFormats("There are no metadata formats available for identifier: " + identifier);
+        }
 
         OAIPMHtype oaipmh = generateOAIPMHType(request, of, VerbType.LIST_METADATA_FORMATS);
 
@@ -67,17 +67,10 @@ public class ListMetadataFormats extends HeaderGenerator {
 
             return mfts;
         } else {
-            Resource metadatadir = new FileSystemResource(configuration.getString("metadata.folder"));
-            File dir = metadatadir.getFile();
-
-            File[] files = dir.listFiles();
-
-            for (File file : files) {
-                Resource resource = new FileSystemResource(file);
-                JAXBContext difcontext = JAXBContext.newInstance(DIF.class);
-                Unmarshaller unmarshaller = difcontext.createUnmarshaller();
-                DIF dif = (DIF) unmarshaller.unmarshal(resource.getInputStream());
+            boolean isfound = false;
+            for (DIF dif : metadataService.getDifRecords()) {
                 if (dif.getEntryID().equals(identifier)) {
+                    isfound = true;
                     MetadataFormatType mft = of.createMetadataFormatType();
                     mft.setMetadataPrefix("dif");
                     mft.setMetadataNamespace("http://gcmd.gsfc.nasa.gov/Aboutus/xml/dif/");
@@ -85,7 +78,7 @@ public class ListMetadataFormats extends HeaderGenerator {
                     mfts.add(mft);
                 }
             }
-            if (mfts.isEmpty()) {
+            if (!isfound) {
                 throw new IdDoesNotExistException("Record with identifier: " + identifier + " does not exist.");
             }
             return mfts;

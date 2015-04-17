@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.converter.xml.Jaxb2RootElementHttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -24,7 +23,7 @@ public class ApplicationConfig extends WebMvcConfigurerAdapter {
 
     @Override
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
-//        converters.add(new MappingJackson2HttpMessageConverter());
+        Jaxb2RootElementHttpMessageConverter j = new Jaxb2RootElementHttpMessageConverter();
         converters.add(new Jaxb2RootElementHttpMessageConverter());
     }
 
@@ -37,12 +36,11 @@ public class ApplicationConfig extends WebMvcConfigurerAdapter {
                 parameterName("format").
                 useJaf(false).
                 defaultContentType(MediaType.APPLICATION_XML).
-//                mediaType("json", MediaType.APPLICATION_JSON).
                 mediaType("xml", MediaType.APPLICATION_XML);
     }
 
     @Bean(name = "providerConf")
-    public PropertiesConfiguration getActiveMQConfiguration() throws ConfigurationException {
+    public PropertiesConfiguration getProviderConfiguration() throws ConfigurationException {
         PropertiesConfiguration conf = new PropertiesConfiguration(System.getProperty("catalina.base") + "/conf/oaipmh-provider.properties");
         conf.setReloadingStrategy(new FileChangedReloadingStrategy());
         return conf;

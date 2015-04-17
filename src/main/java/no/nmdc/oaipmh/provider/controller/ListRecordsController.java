@@ -1,6 +1,5 @@
 package no.nmdc.oaipmh.provider.controller;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Date;
@@ -9,7 +8,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
 import no.nmdc.oaipmh.provider.domain.HeaderType;
 import no.nmdc.oaipmh.provider.domain.ListRecordsType;
@@ -19,49 +17,71 @@ import no.nmdc.oaipmh.provider.domain.ObjectFactory;
 import no.nmdc.oaipmh.provider.domain.RecordType;
 import no.nmdc.oaipmh.provider.domain.VerbType;
 import no.nmdc.oaipmh.provider.domain.dif.DIF;
-import no.nmdc.oaipmh.provider.exceptions.BadMetadataFormatException;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import no.nmdc.oaipmh.provider.exceptions.CannotDisseminateFormatException;
+import no.nmdc.oaipmh.provider.exceptions.NoRecordsMatchException;
+import no.nmdc.oaipmh.provider.exceptions.NoSetHierarchyException;
+import no.nmdc.oaipmh.provider.service.DateCheckerService;
+import no.nmdc.oaipmh.provider.service.MetadataService;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
+ * Controller that handles the ListRecords verb of the oai pmh specification
+ *
+ * As jaxb writes all namespace information on the root node we have to manually
+ * return data from this class as per specification the namespace information
+ * for metadata must be provided on the actual metadata
  *
  * @author sjurl
  */
 @Controller
-public class ListRecords extends HeaderGenerator {
+public class ListRecordsController extends HeaderGenerator {
 
-    @Autowired()
-    @Qualifier("providerConf")
-    private PropertiesConfiguration configuration;
+    @Autowired
+    private MetadataService metadataService;
+
+    @Autowired
+    private DateCheckerService dateCheckerService;
 
     @RequestMapping(value = "oaipmh", params = "verb=ListRecords")
     public void listRecords(@RequestParam(value = "metadataPrefix", required = false) String metadatPrefix,
             @RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date from, @RequestParam(value = "until", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date until,
             @RequestParam(value = "set", required = false) String set, @RequestParam(value = "resumptionToken", required = false) String resumptionToken,
-            HttpServletRequest request, HttpServletResponse response) throws DatatypeConfigurationException, IOException, JAXBException, BadMetadataFormatException {
+            HttpServletRequest request, HttpServletResponse response) throws DatatypeConfigurationException, IOException, JAXBException, CannotDisseminateFormatException, NoSetHierarchyException, NoRecordsMatchException, MissingServletRequestParameterException {
 
-        if (!metadatPrefix.equals("dif")) {
-            throw new BadMetadataFormatException("metadataprefix: " + metadatPrefix + " is not known by the server.");
+        if (metadatPrefix == null && resumptionToken == null) {
+            throw new MissingServletRequestParameterException("metadataPrefix", "String");
+        }
+
+        if (resumptionToken == null && !metadatPrefix.equals("dif")) {
+            throw new CannotDisseminateFormatException("metadataprefix: " + metadatPrefix + " is not known by the server.");
+        }
+
+        if (set != null) {
+            throw new NoSetHierarchyException("The server does not support sets");
         }
 
         ObjectFactory of = new ObjectFactory();
         OAIPMHtype oaipmh = generateOAIPMHType(request, of, VerbType.LIST_RECORDS);
-
-        Resource metadatadir = new FileSystemResource(configuration.getString("metadata.folder"));
-        File dir = metadatadir.getFile();
-
-        File[] files = dir.listFiles();
         String metadataString = "";
-        for (File file : files) {
-            metadataString = metadataString.concat(generateDIFMetadata(of, file.getAbsolutePath()));
+        for (DIF difRecord : metadataService.getDifRecords()) {
+
+            boolean include = true;
+            if (from != null || until != null) {
+                include = dateCheckerService.checkDIFdates(difRecord, from, until);
+            }
+            if (include) {
+                metadataString = metadataString.concat(generateDIFMetadata(of, difRecord));
+            }
+        }
+
+        if (metadataString.isEmpty()) {
+            throw new NoRecordsMatchException("No records matches the query");
         }
 
         ListRecordsType lrt = of.createListRecordsType();
@@ -87,12 +107,7 @@ public class ListRecords extends HeaderGenerator {
 
     }
 
-    private String generateDIFMetadata(ObjectFactory of, String file) throws JAXBException, IOException {
-
-        Resource resource = new FileSystemResource(file);
-        JAXBContext difcontext = JAXBContext.newInstance(DIF.class);
-        Unmarshaller unmarshaller = difcontext.createUnmarshaller();
-        DIF dif = (DIF) unmarshaller.unmarshal(resource.getInputStream());
+    private String generateDIFMetadata(ObjectFactory of, DIF dif) throws JAXBException, IOException {
 
         RecordType record = of.createRecordType();
         HeaderType ht = of.createHeaderType();
@@ -114,6 +129,7 @@ public class ListRecords extends HeaderGenerator {
 
         recordString = recordString.replace(removeString, "");
 
+        JAXBContext difcontext = JAXBContext.newInstance(DIF.class);
         Marshaller ms = difcontext.createMarshaller();
         StringWriter difStringwriter = new StringWriter();
         ms.marshal(dif, difStringwriter);
@@ -130,4 +146,5 @@ public class ListRecords extends HeaderGenerator {
 
         return finalString;
     }
+
 }
