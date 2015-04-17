@@ -1,0 +1,45 @@
+<jxb:bindings version="2.1"
+              xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+              xmlns:xs="http://www.w3.org/2001/XMLSchema"
+              xmlns:annox="http://annox.dev.java.net"
+              xmlns:namespace="http://jaxb2-commons.dev.java.net/namespace-prefix"
+              xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+              xmlns:bio="http://www.imr.no/schemas/nmdapi/nmdbiotic/v1"
+              xmlns:hub="http://www.imr.no/schemas/nmdapi/nmdhub/v1"
+              xmlns:mission="http://www.imr.no/schemas/nmdapi/nmdmission/v1"
+              xmlns:reference="http://www.imr.no/schemas/nmdapi/nmdreference/v1"
+              jxb:extensionBindingPrefixes="xjc annox"              >
+    <!-- By Kjetil Fjellheim (IMR) -->
+    <!--
+    This document is referenced from the pom and is used to change the generated classes.
+    The following has been added. -->
+    <jxb:bindings schemaLocation="../resources/OAI-PMH.xsd" node="/xs:schema">
+        <jxb:globalBindings>
+            <jxb:serializable uid="1" />
+        </jxb:globalBindings>
+        <jxb:schemaBindings>
+            <jxb:package name="no.nmdc.oaipmh.provider.domain" />
+        </jxb:schemaBindings>
+        <!--        <jxb:bindings>
+            <namespace:prefix name="bio" />
+        </jxb:bindings>-->
+
+        <jxb:bindings node="//xs:complexType[@name='OAI-PMHtype']">
+            <annox:annotate>
+                <annox:annotate annox:class="javax.xml.bind.annotation.XmlRootElement" name="OAI-PMH" namespace="http://www.openarchives.org/OAI/2.0/"/>
+            </annox:annotate>
+        </jxb:bindings>
+        
+        <jxb:bindings node="//xs:complexType[@name='metadataType']">
+            <annox:annotate target="class">
+                <annox:annotate annox:class="javax.xml.bind.annotation.XmlSeeAlso" value="no.nmdc.oaipmh.provider.domain.dif.DIF"/>
+            </annox:annotate>
+        </jxb:bindings>
+        
+        <jxb:bindings node="//xs:complexType[@name='recordType']">
+            <annox:annotate>
+                <annox:annotate annox:class="javax.xml.bind.annotation.XmlRootElement" name="record" namespace="http://www.openarchives.org/OAI/2.0/"/>
+            </annox:annotate>
+        </jxb:bindings>
+    </jxb:bindings>
+</jxb:bindings>
