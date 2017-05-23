@@ -3,6 +3,7 @@ package no.nmdc.oaipmh.provider.service;
 import java.io.IOException;
 import java.util.List;
 import javax.xml.bind.JAXBException;
+import no.nmdc.oaipmh.provider.domain.OAIPMHtype;
 import no.nmdc.oaipmh.provider.domain.dif.DIF;
 
 /**
@@ -20,4 +21,17 @@ public interface MetadataService {
      * @throws javax.xml.bind.JAXBException
      */
     List<DIF> getDifRecords() throws IOException, JAXBException;
+
+    /**
+     * 
+     * @return 
+     */
+    OAIPMHtype getSets(String resumptionToken);
+
+    /**
+     * 
+     * @param set
+     * @return 
+     */
+    List<DIF> getDifRecords(String set);
 }

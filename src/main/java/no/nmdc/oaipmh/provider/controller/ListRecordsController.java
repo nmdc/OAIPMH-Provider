@@ -3,6 +3,7 @@ package no.nmdc.oaipmh.provider.controller;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Date;
+import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXBContext;
@@ -62,14 +63,16 @@ public class ListRecordsController extends HeaderGenerator {
             throw new CannotDisseminateFormatException("metadataprefix: " + metadatPrefix + " is not known by the server.");
         }
 
-        if (set != null) {
-            throw new NoSetHierarchyException("The server does not support sets");
-        }
-
         ObjectFactory of = new ObjectFactory();
         OAIPMHtype oaipmh = generateOAIPMHType(request, of, VerbType.LIST_RECORDS);
         String metadataString = "";
-        for (DIF difRecord : metadataService.getDifRecords()) {
+        List<DIF> difs = null;
+        if (set != null) {
+            difs = metadataService.getDifRecords(set);
+        } else {
+            difs = metadataService.getDifRecords();
+        }
+        for (DIF difRecord : difs) {
 
             boolean include = true;
             if (from != null || until != null) {

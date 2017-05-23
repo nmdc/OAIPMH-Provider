@@ -22,7 +22,7 @@ public class ApplicationInit extends AbstractDispatcherServletInitializer {
     @Override
     protected WebApplicationContext createRootApplicationContext() {
         AnnotationConfigWebApplicationContext cxt = new AnnotationConfigWebApplicationContext();
-        cxt.scan("no.nmdc.oaipmh.provider.config", "no.nmdc.oaipmh.provider.controller", "no.nmdc.oaipmh.provider.service");
+        cxt.scan("no.nmdc.oaipmh.provider");
         return cxt;
     }
 

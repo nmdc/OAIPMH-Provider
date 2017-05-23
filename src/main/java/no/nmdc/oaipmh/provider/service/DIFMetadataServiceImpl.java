@@ -7,6 +7,10 @@ import java.util.List;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import no.nmdc.oaipmh.provider.dao.DatasetDao;
+import no.nmdc.oaipmh.provider.dao.dto.Dataset;
+import no.nmdc.oaipmh.provider.domain.ListSetsType;
+import no.nmdc.oaipmh.provider.domain.OAIPMHtype;
 import no.nmdc.oaipmh.provider.domain.dif.DIF;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.slf4j.LoggerFactory;
@@ -28,6 +32,9 @@ public class DIFMetadataServiceImpl implements MetadataService {
     @Autowired()
     @Qualifier("providerConf")
     private PropertiesConfiguration configuration;
+    
+    @Autowired
+    private DatasetDao datasetDao;
 
     @Override
     public List<DIF> getDifRecords() throws IOException {
@@ -46,6 +53,38 @@ public class DIFMetadataServiceImpl implements MetadataService {
                 difFiles.add(dif);
             } catch (JAXBException ex) {
                 LoggerFactory.getLogger(DIFMetadataServiceImpl.class).error("Unable to unmarshal metadata file: " + file.getAbsolutePath());
+            }
+
+        }
+        return difFiles;
+    }
+
+    @Override
+    public OAIPMHtype getSets(String resumptionToke) {
+        OAIPMHtype oaipmh = new OAIPMHtype();
+        oaipmh.setListSets(new ListSetsType());
+        oaipmh.getListSets().getSet().addAll(datasetDao.getDistinctOriginatingCenters());
+        return oaipmh;
+    }
+
+    @Override
+    public List<DIF> getDifRecords(String set) {
+        
+        List<Dataset> datasets = datasetDao.findByOriginatingCenter(set);
+        
+        List<DIF> difFiles = new ArrayList<>();
+        for (Dataset dataset : datasets) {
+            try {
+                Resource resource = new FileSystemResource(new File(dataset.getFilenameDif()));
+                JAXBContext difcontext = JAXBContext.newInstance(DIF.class);
+                Unmarshaller unmarshaller = difcontext.createUnmarshaller();
+
+                DIF dif = (DIF) unmarshaller.unmarshal(resource.getInputStream());
+                difFiles.add(dif);
+            } catch (JAXBException ex) {
+                LoggerFactory.getLogger(DIFMetadataServiceImpl.class).error("Unable to unmarshal metadata file: " + new File(dataset.getFilenameDif()));
+            } catch (IOException ex) {
+                LoggerFactory.getLogger(DIFMetadataServiceImpl.class).error("Unable to find file: " + new File(dataset.getFilenameDif()));
             }
 
         }
