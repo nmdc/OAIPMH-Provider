@@ -2,6 +2,7 @@ package no.nmdc.oaipmh.provider.controller;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -53,15 +54,17 @@ public class ListIdentifiersController extends HeaderGenerator {
             throw new CannotDisseminateFormatException("metadataprefix: " + metadatPrefix + " is not known by the server.");
         }
 
-        if (set != null) {
-            throw new NoSetHierarchyException("The server does not support sets");
-        }
-
         ObjectFactory of = new ObjectFactory();
         OAIPMHtype oaipmh = generateOAIPMHType(request, of, VerbType.LIST_IDENTIFIERS);
         ListIdentifiersType lit = of.createListIdentifiersType();
 
-        for (DIF record : metadataService.getDifRecords()) {
+        List<DIF> difs = null;
+        if (set != null) {
+            difs = metadataService.getDifRecords(set);
+        } else {
+            difs = metadataService.getDifRecords();
+        }        
+        for (DIF record : difs) {
             boolean include = true;
             if (from != null || until != null) {
                 include = dateCheckerService.checkDIFdates(record, from, until);

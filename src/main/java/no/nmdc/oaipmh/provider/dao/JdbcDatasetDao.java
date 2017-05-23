@@ -63,7 +63,7 @@ public class JdbcDatasetDao extends JdbcDaoSupport implements DatasetDao {
 
     @Override
     public List<SetType> getDistinctOriginatingCenters() {
-        return getJdbcTemplate().query("SELECT distinct originating_center FROM nmdc_v1.dataset", new SetRowMapper());
+        return getJdbcTemplate().query("SELECT distinct originating_center FROM nmdc_v1.dataset where originating_center is not null and length(originating_center) > 0", new SetRowMapper());
     }
 
     @Override
