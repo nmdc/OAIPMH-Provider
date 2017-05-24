@@ -16,6 +16,8 @@ public class SetRowMapper implements RowMapper<SetType> {
     public SetType mapRow(ResultSet rs, int rowNum) throws SQLException {
         SetType setType = new SetType();
         setType.setSetName(rs.getString("originating_center"));
+        setType.setSetSpec(rs.getString("originating_center"));
         return setType;
     }    
+
 }
