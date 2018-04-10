@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -33,20 +35,28 @@ public class DIFMetadataServiceImpl implements MetadataService {
     public List<DIF> getDifRecords() throws IOException {
         Resource metadatadir = new FileSystemResource(configuration.getString("metadata.folder"));
         File dir = metadatadir.getFile();
-
+    
+        JAXBContext difcontext=null;
+       List<DIF> difFiles = new ArrayList<>();
+   
+        try {
+            difcontext = JAXBContext.newInstance(DIF.class);
+        
         File[] files = dir.listFiles();
-        List<DIF> difFiles = new ArrayList<>();
         for (File file : files) {
             try {
                 Resource resource = new FileSystemResource(file);
-                JAXBContext difcontext = JAXBContext.newInstance(DIF.class);
+         
                 Unmarshaller unmarshaller = difcontext.createUnmarshaller();
-
                 DIF dif = (DIF) unmarshaller.unmarshal(resource.getInputStream());
                 difFiles.add(dif);
             } catch (JAXBException ex) {
                 LoggerFactory.getLogger(DIFMetadataServiceImpl.class).error("Unable to unmarshal metadata file: " + file.getAbsolutePath());
             }
+
+        }
+        } catch (JAXBException ex) {
+           LoggerFactory.getLogger(DIFMetadataServiceImpl.class).error("Unable to create JXB context  ");
 
         }
         return difFiles;

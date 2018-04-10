@@ -262,6 +262,23 @@
 
 
     <profiles>
+           <profile>
+            <id>tghDeploy</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-war-plugin</artifactId>
+                        <version>2.3</version>
+                        <configuration>
+                            <failOnMissingWebXml>false</failOnMissingWebXml>
+                            <outputDirectory>/arc/tap/HI-OAIPMH-Provider/webapps</outputDirectory>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+      
         <profile>
             <id>release-profile</id>
             <activation>
