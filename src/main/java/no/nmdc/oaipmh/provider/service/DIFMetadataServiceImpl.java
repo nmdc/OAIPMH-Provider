@@ -32,7 +32,7 @@ public class DIFMetadataServiceImpl implements MetadataService {
     @Autowired()
     @Qualifier("providerConf")
     private PropertiesConfiguration configuration;
-    
+
     @Autowired
     private DatasetDao datasetDao;
 
@@ -43,19 +43,26 @@ public class DIFMetadataServiceImpl implements MetadataService {
 
         File[] files = dir.listFiles();
         List<DIF> difFiles = new ArrayList<>();
-        for (File file : files) {
-            try {
-                Resource resource = new FileSystemResource(file);
-                JAXBContext difcontext = JAXBContext.newInstance(DIF.class);
-                Unmarshaller unmarshaller = difcontext.createUnmarshaller();
+        try {
+            JAXBContext difcontext = JAXBContext.newInstance(DIF.class);
 
-                DIF dif = (DIF) unmarshaller.unmarshal(resource.getInputStream());
-                difFiles.add(dif);
-            } catch (JAXBException ex) {
-                LoggerFactory.getLogger(DIFMetadataServiceImpl.class).error("Unable to unmarshal metadata file: " + file.getAbsolutePath());
+            for (File file : files) {
+                try {
+                    Resource resource = new FileSystemResource(file);
+
+                    Unmarshaller unmarshaller = difcontext.createUnmarshaller();
+
+                    DIF dif = (DIF) unmarshaller.unmarshal(resource.getInputStream());
+                    difFiles.add(dif);
+                } catch (JAXBException ex) {
+                    LoggerFactory.getLogger(DIFMetadataServiceImpl.class).error("Unable to unmarshal metadata file: " + file.getAbsolutePath());
+                }
+
             }
-
+        } catch (JAXBException ex) {
+            LoggerFactory.getLogger(DIFMetadataServiceImpl.class).error("Unable to create JAXB Context");
         }
+
         return difFiles;
     }
 
@@ -69,9 +76,9 @@ public class DIFMetadataServiceImpl implements MetadataService {
 
     @Override
     public List<DIF> getDifRecords(String set) {
-        
+
         List<Dataset> datasets = datasetDao.findByOriginatingCenter(set);
-        
+
         List<DIF> difFiles = new ArrayList<>();
         for (Dataset dataset : datasets) {
             try {
