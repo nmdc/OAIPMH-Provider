@@ -29,6 +29,8 @@ public class Dataset {
     
     private Boolean valid;
     
+    private String hash;
+    
     private String filenameHarvested;
     
     private String filenameDif;
@@ -148,11 +150,23 @@ public class Dataset {
     public Boolean getValid() {
         return valid;
     }
+    
+    public void setValid(Boolean valid) 
+            {
+            this.valid = valid;
+    }   
 
-    public void setValid(Boolean valid) {
-        this.valid = valid;
+
+    public void setHash(String hash) {
+        this.hash = hash;
     }
 
+     public String getHash() {
+        return hash;
+    }
+
+
+    
     public String getIdentifier() {
         return identifier;
     }
