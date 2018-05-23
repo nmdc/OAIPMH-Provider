@@ -2,9 +2,7 @@ package no.nmdc.oaipmh.provider.service;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 import javax.xml.bind.JAXBException;
-import no.nmdc.oaipmh.provider.dao.dto.Dataset;
 import no.nmdc.oaipmh.provider.domain.OAIPMHtype;
 import no.nmdc.oaipmh.provider.domain.dif.DIF;
 
