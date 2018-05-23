@@ -24,12 +24,14 @@ import no.nmdc.oaipmh.provider.exceptions.NoSetHierarchyException;
 import no.nmdc.oaipmh.provider.service.DateCheckerService;
 import no.nmdc.oaipmh.provider.service.MetadataService;
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.slf4j.LoggerFactory;
 
 /**
  * Controller that handles the ListRecords verb of the oai pmh specification
@@ -43,12 +45,23 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class ListRecordsController extends HeaderGenerator {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ListRecordsController.class);
+
     @Autowired
     private MetadataService metadataService;
 
     @Autowired
     private DateCheckerService dateCheckerService;
 
+    @Autowired
+    JAXBContext difJaxbContext;
+
+    @Autowired
+     JAXBContext recordTypeJaxbContext;
+    
+    @Autowired
+    JAXBContext oaiJaxbContext;
+    
     @RequestMapping(value = "oaipmh", params = "verb=ListRecords")
     public void listRecords(@RequestParam(value = "metadataPrefix", required = false) String metadatPrefix,
             @RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date from, @RequestParam(value = "until", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date until,
@@ -72,6 +85,9 @@ public class ListRecordsController extends HeaderGenerator {
         } else {
             difs = metadataService.getDifRecords();
         }
+
+        LOG.debug("Retrievd all diff");
+
         for (DIF difRecord : difs) {
 
             boolean include = true;
@@ -90,11 +106,9 @@ public class ListRecordsController extends HeaderGenerator {
         ListRecordsType lrt = of.createListRecordsType();
 
         oaipmh.setListRecords(lrt);
-
-        JAXBContext oaicontext = JAXBContext.newInstance(OAIPMHtype.class);
-        Marshaller oaimarshaller = oaicontext.createMarshaller();
+     
         StringWriter oaistringwriter = new StringWriter();
-        oaimarshaller.marshal(oaipmh, oaistringwriter);
+        oaiJaxbContext.createMarshaller().marshal(oaipmh, oaistringwriter);
 
         String oaiString = oaistringwriter.toString();
 
@@ -104,7 +118,7 @@ public class ListRecordsController extends HeaderGenerator {
         endOai = "</ListRecords>".concat(endOai);
 
         String finalString = startOai.concat(metadataString).concat(endOai);
-
+        LOG.debug("Final string");
         IOUtils.write(finalString, response.getOutputStream());
         response.flushBuffer();
 
@@ -120,10 +134,8 @@ public class ListRecordsController extends HeaderGenerator {
         record.setMetadata(mt);
         record.setHeader(ht);
 
-        JAXBContext oaicontext = JAXBContext.newInstance(RecordType.class);
-        Marshaller oaimarshaller = oaicontext.createMarshaller();
         StringWriter recordwriter = new StringWriter();
-        oaimarshaller.marshal(record, recordwriter);
+        recordTypeJaxbContext.createMarshaller().marshal(record, recordwriter);
 
         String recordString = recordwriter.toString();
 
@@ -132,10 +144,8 @@ public class ListRecordsController extends HeaderGenerator {
 
         recordString = recordString.replace(removeString, "");
 
-        JAXBContext difcontext = JAXBContext.newInstance(DIF.class);
-        Marshaller ms = difcontext.createMarshaller();
         StringWriter difStringwriter = new StringWriter();
-        ms.marshal(dif, difStringwriter);
+        difJaxbContext.createMarshaller().marshal(dif, difStringwriter);
         String difString = difStringwriter.toString();
 
         difString = difString.substring(difString.indexOf("?>") + 2);

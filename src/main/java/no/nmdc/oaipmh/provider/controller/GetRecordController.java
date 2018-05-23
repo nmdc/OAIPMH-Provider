@@ -16,6 +16,7 @@ import no.nmdc.oaipmh.provider.domain.ObjectFactory;
 import no.nmdc.oaipmh.provider.domain.RecordType;
 import no.nmdc.oaipmh.provider.domain.VerbType;
 import no.nmdc.oaipmh.provider.domain.dif.DIF;
+import no.nmdc.oaipmh.provider.domain.dif.DataSetCitation;
 import no.nmdc.oaipmh.provider.exceptions.CannotDisseminateFormatException;
 import no.nmdc.oaipmh.provider.exceptions.IdDoesNotExistException;
 import no.nmdc.oaipmh.provider.service.MetadataService;
@@ -39,6 +40,18 @@ public class GetRecordController extends HeaderGenerator {
 
     @Autowired
     private MetadataService metadataService;
+    
+    
+    @Autowired
+    JAXBContext difJaxbContext;
+
+   @Autowired
+    JAXBContext recordTypeJaxbContext;
+
+   @Autowired
+    JAXBContext oaiJaxbContext;
+
+    
 
     @RequestMapping(value = "oaipmh", params = "verb=GetRecord")
     public void getRecord(@RequestParam("identifier") String identifier, @RequestParam("metadataPrefix") String metadataprefix,
@@ -51,23 +64,22 @@ public class GetRecordController extends HeaderGenerator {
         OAIPMHtype oaipmh = generateOAIPMHType(request, of, VerbType.LIST_RECORDS);
 
         String metadataString = "";
-        for (DIF record : metadataService.getDifRecords()) {
-            if (record.getEntryID().equals(identifier)) {
-                metadataString = metadataString.concat(generateDIFMetadata(of, record));
-            }
-        }
-        if (metadataString.isEmpty()) {
+       
+       DIF record = metadataService.getDifRecord(identifier);
+      
+       if (record == null) {
             throw new IdDoesNotExistException("Record with identifier: " + identifier + " does not exist.");
         }
-
+       
+    
+        metadataString = metadataString.concat(generateDIFMetadata(of, record));
+       
         GetRecordType getRecord = of.createGetRecordType();
-
         oaipmh.setGetRecord(getRecord);
 
-        JAXBContext oaicontext = JAXBContext.newInstance(OAIPMHtype.class);
-        Marshaller oaimarshaller = oaicontext.createMarshaller();
+
         StringWriter oaistringwriter = new StringWriter();
-        oaimarshaller.marshal(oaipmh, oaistringwriter);
+        oaiJaxbContext.createMarshaller().marshal(oaipmh, oaistringwriter);
 
         String oaiString = oaistringwriter.toString();
 
@@ -84,8 +96,7 @@ public class GetRecordController extends HeaderGenerator {
 
     private String generateDIFMetadata(ObjectFactory of, DIF dif) throws JAXBException, IOException {
 
-        JAXBContext difcontext = JAXBContext.newInstance(DIF.class);
-
+    
         RecordType record = of.createRecordType();
         HeaderType ht = of.createHeaderType();
         ht.setIdentifier(dif.getEntryID());
@@ -94,10 +105,8 @@ public class GetRecordController extends HeaderGenerator {
         record.setMetadata(mt);
         record.setHeader(ht);
 
-        JAXBContext oaicontext = JAXBContext.newInstance(RecordType.class);
-        Marshaller oaimarshaller = oaicontext.createMarshaller();
         StringWriter recordwriter = new StringWriter();
-        oaimarshaller.marshal(record, recordwriter);
+        recordTypeJaxbContext.createMarshaller().marshal(record, recordwriter);
 
         String recordString = recordwriter.toString();
 
@@ -106,9 +115,9 @@ public class GetRecordController extends HeaderGenerator {
 
         recordString = recordString.replace(removeString, "");
 
-        Marshaller ms = difcontext.createMarshaller();
+ 
         StringWriter difStringwriter = new StringWriter();
-        ms.marshal(dif, difStringwriter);
+        difJaxbContext.createMarshaller().marshal(dif, difStringwriter);
         String difString = difStringwriter.toString();
 
         difString = difString.substring(difString.indexOf("?>") + 2);
