@@ -40,6 +40,15 @@ public class GetRecordController extends HeaderGenerator {
     @Autowired
     private MetadataService metadataService;
 
+    @Autowired
+    JAXBContext difJaxbContext;
+
+    @Autowired
+    JAXBContext recordTypeJaxbContext;
+
+    @Autowired
+    JAXBContext oaiJaxbContext;
+    
     @RequestMapping(value = "oaipmh", params = "verb=GetRecord")
     public void getRecord(@RequestParam("identifier") String identifier, @RequestParam("metadataPrefix") String metadataprefix,
             HttpServletRequest request, HttpServletResponse response) throws DatatypeConfigurationException, CannotDisseminateFormatException, IOException, JAXBException, IdDoesNotExistException {
@@ -64,8 +73,8 @@ public class GetRecordController extends HeaderGenerator {
 
         oaipmh.setGetRecord(getRecord);
 
-        JAXBContext oaicontext = JAXBContext.newInstance(OAIPMHtype.class);
-        Marshaller oaimarshaller = oaicontext.createMarshaller();
+
+        Marshaller oaimarshaller = oaiJaxbContext.createMarshaller();
         StringWriter oaistringwriter = new StringWriter();
         oaimarshaller.marshal(oaipmh, oaistringwriter);
 
@@ -84,7 +93,7 @@ public class GetRecordController extends HeaderGenerator {
 
     private String generateDIFMetadata(ObjectFactory of, DIF dif) throws JAXBException, IOException {
 
-        JAXBContext difcontext = JAXBContext.newInstance(DIF.class);
+
 
         RecordType record = of.createRecordType();
         HeaderType ht = of.createHeaderType();
@@ -94,8 +103,8 @@ public class GetRecordController extends HeaderGenerator {
         record.setMetadata(mt);
         record.setHeader(ht);
 
-        JAXBContext oaicontext = JAXBContext.newInstance(RecordType.class);
-        Marshaller oaimarshaller = oaicontext.createMarshaller();
+
+        Marshaller oaimarshaller = recordTypeJaxbContext.createMarshaller();
         StringWriter recordwriter = new StringWriter();
         oaimarshaller.marshal(record, recordwriter);
 
@@ -106,7 +115,7 @@ public class GetRecordController extends HeaderGenerator {
 
         recordString = recordString.replace(removeString, "");
 
-        Marshaller ms = difcontext.createMarshaller();
+        Marshaller ms = difJaxbContext.createMarshaller();
         StringWriter difStringwriter = new StringWriter();
         ms.marshal(dif, difStringwriter);
         String difString = difStringwriter.toString();
@@ -123,3 +132,4 @@ public class GetRecordController extends HeaderGenerator {
         return finalString;
     }
 }
+ 

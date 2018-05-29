@@ -3,6 +3,8 @@ package no.nmdc.oaipmh.provider.controller;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
+import java.util.TimeZone;
+import java.text.SimpleDateFormat;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -24,10 +26,17 @@ public abstract class HeaderGenerator {
 
         String baseUrl = String.format("%s://%s:%d/request/oaipmh", request.getScheme(), request.getServerName(), request.getServerPort());
         OAIPMHtype oaipmh = of.createOAIPMHtype();
-        GregorianCalendar cal = new GregorianCalendar();
-        cal.setTime(new Date());
-        XMLGregorianCalendar cal2 = DatatypeFactory.newInstance().newXMLGregorianCalendar(cal);
-        oaipmh.setResponseDate(cal2);
+
+
+	//Following lines is a quick hack to get the required ISO8601 to be produced
+        //This should be done propery at the JAXB level when there is time...
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        df.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String dateString = df.format(new Date())+"Z"; //Add the Z because SimpleDateFormat does not support it
+
+        //XMLGegorianCalendar is smart enough to respect the text format it is given
+        XMLGregorianCalendar calendar = DatatypeFactory.newInstance().newXMLGregorianCalendar(dateString);
+        oaipmh.setResponseDate(calendar);
 
         RequestType rt = generateRequestType(request, of, baseUrl, requestType);
 
