@@ -79,14 +79,16 @@ public class DIFMetadataServiceImpl implements MetadataService {
     public OAIPMHtype getSets(String resumptionToke) {
         OAIPMHtype oaipmh = new OAIPMHtype();
         oaipmh.setListSets(new ListSetsType());
-        oaipmh.getListSets().getSet().addAll(datasetDao.getDistinctOriginatingCenters());
+        //oaipmh.getListSets().getSet().addAll(datasetDao.getDistinctOriginatingCenters());
+	oaipmh.getListSets().getSet().addAll(datasetDao.listSets());
         return oaipmh;
     }
 
     @Override
     public List<DIF> getDifRecords(String set) {
 
-        List<Dataset> datasets = datasetDao.findByOriginatingCenter(set);
+        //List<Dataset> datasets = datasetDao.findByOriginatingCenter(set);
+	List<Dataset> datasets = datasetDao.findBySet(set);
         List<DIF> difFiles = new ArrayList<>();
         try {
             Unmarshaller difUnmarshaller = difJaxbContext.createUnmarshaller();

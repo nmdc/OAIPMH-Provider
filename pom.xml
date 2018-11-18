@@ -282,8 +282,8 @@
 
 
     <profiles>
-      <'profile>
-            <id>tghDeploy</id>
+      <profile>
+            <id>localDeploy</id>
             <build>
                 <plugins>
                     <plugin>
@@ -292,7 +292,8 @@
                         <version>2.3</version>
                         <configuration>
                             <failOnMissingWebXml>false</failOnMissingWebXml>
-                            <outputDirectory>/arc/tap/HI-OAIPMH-Provider/webapps</outputDirectory>
+                            <outputDirectory>/arc/tap/nmdcProvider/webapps</outputDirectory>
+			    <!--outputDirectory>/arc/tap/HI-OAIPMH-Provider/webapps</outputDirectory-->
                         </configuration>
                     </plugin>
                 </plugins>

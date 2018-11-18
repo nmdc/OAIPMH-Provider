@@ -5,8 +5,10 @@ import java.util.List;
 import java.util.TimeZone;
 import javax.sql.DataSource;
 import no.nmdc.oaipmh.provider.dao.dto.Dataset;
+import no.nmdc.oaipmh.provider.dao.dto.Set;
 import no.nmdc.oaipmh.provider.dao.rowmapper.DatasetRowMapper;
 import no.nmdc.oaipmh.provider.dao.rowmapper.SetRowMapper;
+import no.nmdc.oaipmh.provider.dao.rowmapper.SetTypeRowMapper;
 import no.nmdc.oaipmh.provider.domain.SetType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
@@ -69,6 +71,17 @@ public class JdbcDatasetDao extends JdbcDaoSupport implements DatasetDao {
     @Override
     public List<Dataset> findByOriginatingCenter(String set) {
         return getJdbcTemplate().query("SELECT id, filename_harvested, providerurl, schema, updated_by, inserted_by, updated_time, inserted_time, set, identifier, filename_dif, filename_nmdc, filename_html, hash, originating_center FROM nmdc_v1.dataset where originating_center=?", new DatasetRowMapper(), set.replaceAll("OriginatingCenter:", ""));
+    }
+
+    @Override
+    public List<Dataset> findBySet(String set) {
+        return getJdbcTemplate().query("SELECT d.id, filename_harvested, providerurl, schema, updated_by, inserted_by, updated_time, inserted_time, set, identifier, filename_dif, filename_nmdc, filename_html, hash, originating_center FROM nmdc_v1.set s,nmdc_v1.set_member m,nmdc_v1.dataset d  where m.set_id = s.id and m.dataset_id = d.id  and s.name = ? ", new DatasetRowMapper(),set);
+    }
+
+
+    @Override
+    public List<SetType> listSets() {
+	return getJdbcTemplate().query("SELECT name, spec FROM nmdc_v1.set ", new SetRowMapper());
     }
 
    

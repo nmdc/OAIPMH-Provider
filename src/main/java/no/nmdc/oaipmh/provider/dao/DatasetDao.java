@@ -3,6 +3,7 @@ package no.nmdc.oaipmh.provider.dao;
 
 import java.util.List;
 import no.nmdc.oaipmh.provider.dao.dto.Dataset;
+import no.nmdc.oaipmh.provider.dao.dto.Set;
 import no.nmdc.oaipmh.provider.domain.SetType;
 
 /**
@@ -53,6 +54,8 @@ public interface DatasetDao {
 
     List<Dataset> findByOriginatingCenter(String set);
 
-    
+    List<Dataset> findBySet(String set);
+
+    List<SetType> listSets();
     
 }
