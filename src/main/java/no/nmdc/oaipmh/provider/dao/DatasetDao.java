@@ -3,7 +3,6 @@ package no.nmdc.oaipmh.provider.dao;
 
 import java.util.List;
 import no.nmdc.oaipmh.provider.dao.dto.Dataset;
-import no.nmdc.oaipmh.provider.dao.dto.Set;
 import no.nmdc.oaipmh.provider.domain.SetType;
 
 /**
